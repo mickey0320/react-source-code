@@ -1,4 +1,4 @@
-import { REACT_TEXT } from "./constants"
+import { REACT_FORWORD_REF_TYPE, REACT_TEXT } from "./constants"
 import addEvent from "./event"
 
 function render(vdom, container){
@@ -7,7 +7,7 @@ function render(vdom, container){
 }
 
 function createDOM(vdom){
-  const {type, props} = vdom
+  const {type, props,ref} = vdom
   // 文本节点
   if(type === REACT_TEXT){
     return document.createTextNode(props.content)
@@ -15,6 +15,7 @@ function createDOM(vdom){
   // 原生的节点
   if(typeof type === 'string'){
     const el = document.createElement(type)
+    ref.current = el 
     updateProps(props, el)
     if(props.children){
       if(Array.isArray(props.children)){
@@ -31,6 +32,8 @@ function createDOM(vdom){
     }else{// 函数组件
       return mountFunctionComponent(vdom)
     }
+  }else if(type.$$typeof === REACT_FORWORD_REF_TYPE){
+    return mountForwardComponent(vdom)
   }
 }
 
@@ -42,10 +45,19 @@ function mountFunctionComponent(vdom){
 }
 
 function mountClassComponent(vdom){
-  const {type, props} = vdom
+  const {type, props,ref} = vdom
   const classInstance = new type(props)
+  ref.current = classInstance
   const renderVdom = classInstance.render()
   classInstance.oldRenderVdom = vdom.oldRenderVdom = renderVdom
+
+  return createDOM(renderVdom)
+}
+
+function mountForwardComponent(vdom){
+  const {render,props, ref} = vdom
+  const renderVdom = render(props,ref)
+  vdom.oldRenderVdom = renderVdom
 
   return createDOM(renderVdom)
 }
@@ -86,9 +98,11 @@ function compareTwoVdom(parent,oldVdom,newVdom){
   parent.replaceChild(newDOM, oldDOM)
 }
 
+
+
 const ReactDOM = {
   render,
   findDOM,
-  compareTwoVdom
+  compareTwoVdom,
 }
 export default ReactDOM
