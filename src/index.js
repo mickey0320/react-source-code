@@ -1,14 +1,36 @@
 import React from './react/react'
 import ReactDOM from './react/react-dom'
 
-// const ele = (
-//   <div style={{color:'red'}}>test</div>
-// )
-function Hello(props){
-  return React.createElement('h1',null,props.name)
-  // return <h1>{props.name}</h1>
+class Counter extends React.Component{
+  state = {
+    num: 0
+  } 
+  add = () => {
+    this.setState({
+      num: this.state.num + 1
+    })
+    console.log(this.state.num)
+  }
+  render(){
+    return React.createElement(
+      'div',
+      null, 
+      React.createElement('p',null, this.state.num),
+      React.createElement('button',{onclick: this.add},'+')
+    )
+    // return (
+    //   <div>
+    //     <p>{this.state.num}</p>
+    //     <button onClick={this.add}>+</button>
+    //   </div>
+    // )
+  }
 }
-// const ele = React.createElement('div',{style:{color:'red'}},'test')
-const ele = React.createElement(Hello,{name:'react'})
 
-ReactDOM.render(ele, document.getElementById('root'))
+// class XX extends React.Component{
+//   render(){
+//     return React.createElement('div',null,'hello')
+//   }
+// }
+
+ReactDOM.render(React.createElement(Counter,{}), document.getElementById('root'))
