@@ -25,7 +25,8 @@ class Updater{
     }
     this.emitUpdate()
   }
-  emitUpdate(){
+  emitUpdate(nextProps){
+    this.nextProps = nextProps
     if(updateQueue.isBatchingUpdate){
       updateQueue.updaters.push(this)
     }else{
@@ -33,9 +34,9 @@ class Updater{
     }
   }
   updateComponent(){
-    const {pendingStates, classInstance} = this
+    const {pendingStates,nextProps, classInstance} = this
     if(pendingStates.length){
-      shouldUpdate(classInstance, this.getState())
+      shouldUpdate(classInstance,nextProps, this.getState())
     }
   }
   getState(){
@@ -53,9 +54,21 @@ class Updater{
   }
 }
 
-function shouldUpdate(classInstance, newState){
+function shouldUpdate(classInstance,nextProps, newState){
+  let willUpdate = true
+  if(classInstance.shouldComponentUpdate && !classInstance.shouldComponentUpdate(nextProps,newState)){
+    willUpdate = false
+  }
+  if(willUpdate && classInstance.componentWillUpdate){
+    classInstance.componentWillUpdate()
+  }
+  if(nextProps){
+    classInstance.nextProps = nextProps
+  }
   classInstance.state = newState
-  classInstance.forceUpdate()
+  if(willUpdate){
+    classInstance.forceUpdate()
+  }
 }
 class Component{
   static isReactComponent = true
@@ -73,6 +86,9 @@ class Component{
     const parent = findDOM(oldRenderVdom).parentNode
     compareTwoVdom(parent,oldRenderVdom,newRenderVdom)
     this.oldRenderVdom = newRenderVdom
+    if(this.componentDidUpdate){
+      this.componentDidUpdate()
+    }
   }
 }
 
